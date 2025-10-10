@@ -1,0 +1,64 @@
+{
+  "description": "Example Firestore data structure for the companies collection",
+  "collection": "companies",
+  "documents": [
+    {
+      "documentId": "acme-corp-001",
+      "data": {
+        "name": "Acme Corporation",
+        "accessCode": "acme-secure-2024-v1",
+        "isActive": true,
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2024-01-01T00:00:00Z",
+        "metadata": {
+          "contactEmail": "api@acme.com",
+          "maxRequestsPerDay": 10000,
+          "features": ["basic", "analytics"]
+        }
+      }
+    },
+    {
+      "documentId": "techstart-inc-002",
+      "data": {
+        "name": "TechStart Inc",
+        "accessCode": "techstart-api-key-2024",
+        "isActive": true,
+        "createdAt": "2024-02-15T10:30:00Z",
+        "updatedAt": "2024-02-15T10:30:00Z",
+        "metadata": {
+          "contactEmail": "dev@techstart.com",
+          "maxRequestsPerDay": 50000,
+          "features": ["premium", "analytics", "webhooks"]
+        }
+      }
+    },
+    {
+      "documentId": "old-company-003",
+      "data": {
+        "name": "Inactive Company",
+        "accessCode": "old-access-code-123",
+        "isActive": false,
+        "createdAt": "2023-06-01T00:00:00Z",
+        "updatedAt": "2024-01-10T15:45:00Z",
+        "metadata": {
+          "contactEmail": "support@oldcompany.com",
+          "maxRequestsPerDay": 1000,
+          "features": ["basic"],
+          "deactivatedReason": "Account suspended"
+        }
+      }
+    }
+  ],
+  "notes": [
+    "The 'accessCode' field is used for authentication in public endpoints",
+    "Only companies with 'isActive: true' can access the API",
+    "The middleware checks both accessCode and isActive status",
+    "Document IDs can be auto-generated or custom (as shown above)",
+    "Timestamps should be Firestore Timestamp objects in actual database",
+    "Additional metadata can be stored for business logic and analytics"
+  ],
+  "firebaseCliCommands": {
+    "importData": "firebase firestore:import ./firestore-backup --project YOUR_PROJECT_ID",
+    "exportData": "firebase firestore:export ./firestore-backup --project YOUR_PROJECT_ID"
+  }
+}

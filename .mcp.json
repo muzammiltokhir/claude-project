@@ -1,0 +1,23 @@
+{
+    "mcpServers": {
+      "sequentialthinking": {
+        "command": "docker",
+        "args": ["run", "--rm", "-i", "mcp/sequentialthinking"]
+      },
+      "context7": {
+        "type": "stdio",
+        "command": "npx",
+        "args": ["-y", "@upstash/context7-mcp"],
+        "env": {}
+      },
+      "firebase": {
+        "command": "npx",
+        "args": ["-y", "firebase-tools@latest", "experimental:mcp"]
+      },
+      "chrome-devtools": {
+        "command": "npx",
+        "args": ["chrome-devtools-mcp@latest"]
+      }
+    }
+  }
+  

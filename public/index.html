@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Functions API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1976d2;
+            text-align: center;
+        }
+        .endpoint {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #1976d2;
+        }
+        .method {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            color: white;
+            margin-right: 10px;
+        }
+        .get { background-color: #28a745; }
+        .post { background-color: #007bff; }
+        .auth-required {
+            color: #dc3545;
+            font-size: 0.9em;
+        }
+        .links {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 5px;
+            background-color: #1976d2;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #1565c0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Firebase Functions API</h1>
+        <p>Welcome to the Firebase Cloud Functions API with Express.js. This API provides both public and private endpoints with different authentication methods.</p>
+        
+        <h2>📡 Available Endpoints</h2>
+        
+        <div class="endpoint">
+            <span class="method get">GET</span>
+            <strong>/</strong>
+            <p>Health check endpoint - Returns API status and timestamp</p>
+        </div>
+
+        <div class="endpoint">
+            <span class="method get">GET</span>
+            <strong>/docs</strong>
+            <p>Interactive Swagger/OpenAPI documentation</p>
+        </div>
+
+        <div class="endpoint">
+            <span class="method get">GET</span>
+            <strong>/api/public</strong>
+            <p>Public endpoint requiring company access code
+            <br><span class="auth-required">🔑 Requires: x-access-code header</span></p>
+        </div>
+
+        <div class="endpoint">
+            <span class="method post">POST</span>
+            <strong>/api/public/data</strong>
+            <p>Submit data to public endpoint
+            <br><span class="auth-required">🔑 Requires: x-access-code header</span></p>
+        </div>
+
+        <div class="endpoint">
+            <span class="method get">GET</span>
+            <strong>/api/private</strong>
+            <p>Private endpoint for authenticated Firebase users
+            <br><span class="auth-required">🔑 Requires: Authorization Bearer token</span></p>
+        </div>
+
+        <div class="endpoint">
+            <span class="method get">GET</span>
+            <strong>/api/private/profile</strong>
+            <p>User profile endpoint for authenticated Firebase users
+            <br><span class="auth-required">🔑 Requires: Authorization Bearer token</span></p>
+        </div>
+
+        <div class="links">
+            <a href="/api" class="btn">🔍 Test API Health</a>
+            <a href="/api/docs" class="btn">📚 View API Documentation</a>
+        </div>
+
+        <h2>🔧 Development Info</h2>
+        <p><strong>Project ID:</strong> public-api-37564</p>
+        <p><strong>Function Name:</strong> api</p>
+        <p><strong>Technology Stack:</strong> TypeScript, Express.js, Firebase Functions</p>
+    </div>
+</body>
+</html>
