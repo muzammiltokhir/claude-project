@@ -1,14 +1,15 @@
 # CLAUDE.md - Claude Code Instructions
 
-This file contains instructions for Claude Code to properly build, test, and deploy the Firebase Cloud Functions API project.
+This file contains instructions for Claude Code to properly build, test, and deploy the Express.js API project with Firebase Authentication and MongoDB.
 
 ## 🏗️ Project Overview
 
-- **Project Type**: Firebase Cloud Functions with TypeScript and Express.js
-- **Project ID**: `public-api-37564`
-- **Main Function**: `api` (exported from src/index.ts)
+- **Project Type**: Express.js REST API with TypeScript
+- **Database**: MongoDB with Mongoose ODM
+- **Authentication**: Firebase Admin SDK (ID Token verification)
 - **Language**: TypeScript
-- **Framework**: Express.js with Firebase Functions
+- **Framework**: Express.js with comprehensive middleware stack
+- **Documentation**: Swagger/OpenAPI integration
 
 ## 📋 Build Commands
 
@@ -22,41 +23,49 @@ npm install
 npm run build
 ```
 
-### Start Local Development (Firebase Emulators)
+### Start Development Server
 ```bash
-npm run serve
+npm run dev
 ```
 
-### Deploy to Firebase
+### Start Production Server
 ```bash
-npm run deploy
-```
-
-### View Function Logs
-```bash
-npm run logs
+npm start
 ```
 
 ## 🧪 Testing Commands
 
-### Local Testing URLs
-- **Functions Emulator**: `http://localhost:5001/public-api-37564/us-central1/api`
-- **Health Check**: `http://localhost:5001/public-api-37564/us-central1/api/`
-- **Swagger Docs**: `http://localhost:5001/public-api-37564/us-central1/api/docs`
+### Local Development URLs
+- **API Server**: `http://localhost:3000`
+- **Health Check**: `http://localhost:3000/`
+- **Swagger Docs**: `http://localhost:3000/docs`
+- **Auth Endpoint**: `http://localhost:3000/auth/login`
+- **User Endpoint**: `http://localhost:3000/users/me`
+- **Admin Endpoint**: `http://localhost:3000/admin/users`
 
-### Production URLs
-- **Functions**: `https://us-central1-public-api-37564.cloudfunctions.net/api`
-- **Swagger Docs**: `https://us-central1-public-api-37564.cloudfunctions.net/api/docs`
+### Environment Configuration
+Ensure `.env` file is configured:
+```env
+PORT=3000
+NODE_ENV=development
+MONGODB_URI=mongodb://localhost:27017/express-firebase-api
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
+API_BASE_URL=http://localhost:3000
+```
 
 ## 🔧 Development Workflow
 
 ### 1. Environment Setup
 ```bash
-# Set up Firebase service account for local development
+# Set up Firebase service account for authentication
 export GOOGLE_APPLICATION_CREDENTIALS="path/to/serviceAccountKey.json"
 
-# Or use Firebase login
+# Or use Firebase login (if in Firebase project directory)
 firebase login
+
+# Ensure MongoDB is running
+# Local: mongod
+# Cloud: Ensure MONGODB_URI points to your cluster
 ```
 
 ### 2. Install Dependencies
@@ -66,21 +75,39 @@ npm install
 
 ### 3. Start Development Server
 ```bash
-npm run serve
+npm run dev
 ```
 
 ### 4. Test Endpoints
 ```bash
 # Health check
-curl http://localhost:5001/public-api-37564/us-central1/api/
+curl http://localhost:3000/
 
-# Test public endpoint (requires Firestore setup)
-curl -X GET http://localhost:5001/public-api-37564/us-central1/api/api/public \
-  -H "x-access-code: test-access-code"
+# Step 1: Register a new user (or sign in existing user)
+curl -X POST http://localhost:3000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email": "user@example.com", "password": "password123", "displayName": "Test User"}'
 
-# Test private endpoint (requires Firebase Auth token)
-curl -X GET http://localhost:5001/public-api-37564/us-central1/api/api/private \
-  -H "Authorization: Bearer YOUR_FIREBASE_ID_TOKEN"
+# Alternative: Sign in existing user
+curl -X POST http://localhost:3000/auth/signin \
+  -H "Content-Type: application/json" \
+  -d '{"email": "user@example.com", "password": "password123"}'
+
+# Step 2: Use the returned idToken from step 1 for authenticated requests
+export ID_TOKEN="<idToken_from_step_1>"
+
+# Step 3: Sync user with MongoDB (first time)
+curl -X POST http://localhost:3000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"idToken": "'$ID_TOKEN'"}'
+
+# Step 4: Access protected endpoints
+curl -X GET http://localhost:3000/users/me \
+  -H "Authorization: Bearer $ID_TOKEN"
+
+# Step 5: Admin endpoints (if user has admin role)
+curl -X GET http://localhost:3000/admin/users \
+  -H "Authorization: Bearer $ID_TOKEN"
 ```
 
 ## 🚀 Deployment Process
@@ -88,29 +115,34 @@ curl -X GET http://localhost:5001/public-api-37564/us-central1/api/api/private \
 ### Pre-deployment Checklist
 1. ✅ Build successful: `npm run build`
 2. ✅ TypeScript compilation: Check `lib/` directory exists
-3. ✅ Firebase project configured: `.firebaserc` exists with correct project ID
-4. ✅ Environment variables set (if any)
+3. ✅ Environment variables configured for production
+4. ✅ MongoDB connection string updated for production
+5. ✅ Firebase service account credentials available
+
+### Production Environment Variables
+```env
+NODE_ENV=production
+PORT=3000
+MONGODB_URI=your-production-mongodb-uri
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
+ALLOWED_ORIGINS=https://yourdomain.com
+API_BASE_URL=https://api.yourdomain.com
+```
 
 ### Deploy Commands
 ```bash
-# Build first
+# Build for production
 npm run build
 
-# Deploy functions only
-firebase deploy --only functions
-
-# Deploy everything (functions + hosting)
-firebase deploy
-
-# Deploy specific function
-firebase deploy --only functions:api
+# Start production server
+npm start
 ```
 
 ## 📊 API Documentation
 
 ### Swagger/OpenAPI
-- **Local**: `http://localhost:5001/public-api-37564/us-central1/api/docs`
-- **Production**: `https://us-central1-public-api-37564.cloudfunctions.net/api/docs`
+- **Local**: `http://localhost:3000/docs`
+- **Production**: `https://your-domain.com/docs`
 
 ### Available Endpoints
 
@@ -118,27 +150,66 @@ firebase deploy --only functions:api
 |--------|----------|---------------|-------------|
 | GET | `/` | None | Health check |
 | GET | `/docs` | None | Swagger documentation |
-| GET | `/api/public` | Company Access Code | Public data endpoint |
-| POST | `/api/public/data` | Company Access Code | Submit data to public endpoint |
-| GET | `/api/private` | Firebase Auth | Private data endpoint |
-| GET | `/api/private/profile` | Firebase Auth | User profile endpoint |
+| POST | `/auth/register` | Email/Password (Body) | Register new user & get ID token |
+| POST | `/auth/signin` | Email/Password (Body) | Sign in & get ID token |
+| POST | `/auth/login` | Firebase ID Token (Body) | User login and sync with MongoDB |
+| GET | `/users/me` | Firebase Auth | Get current user profile |
+| PATCH | `/users/update` | Firebase Auth | Update user profile |
+| GET | `/admin/users` | Firebase Auth (Admin) | Get all users (paginated) |
+| PATCH | `/admin/users/:id/toggle-status` | Firebase Auth (Admin) | Enable/disable user |
 
 ## 🔑 Authentication Setup
 
-### Company Access Codes (Firestore)
-Create documents in `companies` collection:
-```javascript
+### Complete Authentication Flow
+
+#### Option 1: Register New User
+1. **POST /auth/register** with email/password
+2. Receive Firebase ID token in response
+3. Use ID token for subsequent API calls
+
+#### Option 2: Sign In Existing User  
+1. **POST /auth/signin** with email/password
+2. Receive Firebase ID token in response
+3. Use ID token for subsequent API calls
+
+#### Option 3: Direct ID Token (if you already have one)
+1. **POST /auth/login** with Firebase ID token
+2. User synced with MongoDB
+3. Continue with API calls
+
+#### API Authentication Process
+1. Client calls `/auth/register` or `/auth/signin` with email/password
+2. Server authenticates with Firebase and returns ID token
+3. Client uses ID token in Authorization header for protected routes
+4. Server verifies token and syncs/loads user from MongoDB
+5. Role-based access control applied based on user role
+
+### User Roles
+- **user**: Default role for new users
+- **admin**: Can access admin endpoints
+
+### MongoDB User Data
+Users are automatically synced from Firebase to MongoDB with this structure:
+```typescript
 {
-  "name": "Test Company",
-  "accessCode": "test-access-code",
-  "isActive": true,
-  "createdAt": firestore.Timestamp.now(),
-  "updatedAt": firestore.Timestamp.now()
+  uid: string;              // Firebase UID
+  email: string;            // User email
+  displayName?: string;     // Display name
+  photoURL?: string;        // Profile photo
+  role: 'user' | 'admin';   // User role
+  isActive: boolean;        // Account status
+  profile: {                // Extended profile
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+    address?: string;
+    dateOfBirth?: Date;
+  };
+  createdAt: Date;
+  updatedAt: Date;
+  lastLoginAt?: Date;
 }
 ```
-
-### Firebase Authentication
-Users need valid Firebase ID tokens from Firebase Auth.
 
 ## 🛠️ Troubleshooting
 
@@ -156,44 +227,67 @@ npm run build
 ```bash
 # Check TypeScript configuration
 npx tsc --noEmit
+
+# Build and check for errors
+npm run build
 ```
 
-#### Firebase Deployment Issues
+#### MongoDB Connection Issues
+```bash
+# Check MongoDB is running locally
+mongosh --eval "db.adminCommand('ping')"
+
+# Test connection string
+node -e "const mongoose = require('mongoose'); mongoose.connect('YOUR_MONGODB_URI').then(() => console.log('Connected')).catch(e => console.error(e))"
+```
+
+#### Firebase Authentication Issues
 ```bash
 # Check Firebase project
 firebase projects:list
-firebase use public-api-37564
 
-# Check Firebase functions status
-firebase functions:list
-```
-
-#### Local Emulator Issues
-```bash
-# Start emulators with debug info
-firebase emulators:start --debug
-
-# Kill any running emulators
-pkill -f firebase
+# Verify service account
+node -e "const admin = require('firebase-admin'); admin.initializeApp({credential: admin.credential.applicationDefault()}); console.log('Firebase initialized')"
 ```
 
 ### Environment Variables
 - `GOOGLE_APPLICATION_CREDENTIALS`: Path to Firebase service account key
-- `FIREBASE_CONFIG`: Automatically set by Firebase Functions runtime
+- `MONGODB_URI`: MongoDB connection string
+- `PORT`: Server port (default: 3000)
+- `NODE_ENV`: Environment (development/production)
+- `ALLOWED_ORIGINS`: CORS allowed origins
 
-### File Structure Check
+#### Firebase Client Configuration
+For email/password authentication, configure these Firebase client settings:
+- `FIREBASE_API_KEY`: Firebase project API key
+- `FIREBASE_AUTH_DOMAIN`: Firebase auth domain (project-id.firebaseapp.com)
+- `FIREBASE_PROJECT_ID`: Firebase project ID
+- `FIREBASE_STORAGE_BUCKET`: Firebase storage bucket
+- `FIREBASE_MESSAGING_SENDER_ID`: Firebase messaging sender ID
+- `FIREBASE_APP_ID`: Firebase app ID
+
+### File Structure
 ```
 ├── src/
 │   ├── config/
-│   │   ├── firebase.ts
-│   │   └── swagger.ts
+│   │   ├── database.ts         # MongoDB connection
+│   │   ├── firebase.ts         # Firebase Admin SDK
+│   │   └── swagger.ts          # API documentation
 │   ├── middleware/
-│   │   └── auth.ts
-│   ├── types.ts
-│   └── index.ts
-├── lib/                    # Generated by TypeScript build
-├── .firebaserc            # Firebase project configuration
-├── firebase.json          # Firebase configuration
+│   │   ├── auth.ts            # Authentication & authorization
+│   │   ├── errorHandler.ts    # Global error handling
+│   │   └── rateLimiter.ts     # Rate limiting
+│   ├── models/
+│   │   └── User.ts            # User MongoDB schema
+│   ├── routes/
+│   │   ├── auth.ts           # Authentication routes
+│   │   ├── users.ts          # User management routes
+│   │   └── admin.ts          # Admin routes
+│   ├── types.ts              # TypeScript interfaces
+│   ├── app.ts               # Express app configuration
+│   └── server.ts            # Server startup
+├── lib/                     # Generated by TypeScript build
+├── .env                     # Environment configuration
 ├── package.json
 └── tsconfig.json
 ```
@@ -213,17 +307,29 @@ ls -la lib/
 ### Code Style
 - Follow existing TypeScript conventions
 - Use async/await for asynchronous operations
-- Implement proper error handling
+- Implement proper error handling with try-catch
 - Add JSDoc comments for Swagger documentation
+- Use middleware for cross-cutting concerns
+
+## 🛡️ Security Features
+
+- **Rate Limiting**: Multiple levels (general, auth, admin)
+- **Input Validation**: express-validator on all inputs
+- **CORS Protection**: Configurable allowed origins
+- **Helmet Security**: Security headers and protection
+- **Firebase Authentication**: Secure token-based auth
+- **Role-Based Access**: Middleware-protected routes
+- **Error Handling**: Comprehensive error responses
 
 ## 🚨 Important Notes
 
 1. **Always build before deploying**: `npm run build`
-2. **Test locally first**: Use Firebase emulators
-3. **Check logs for errors**: `npm run logs`
-4. **Monitor Firestore usage**: Company access codes are stored in Firestore
+2. **Test locally first**: Use development server
+3. **Monitor MongoDB usage**: User data stored in MongoDB
+4. **Check logs for errors**: Server logs show detailed information
 5. **Swagger docs are available**: Use `/docs` endpoint for API documentation
-6. **Authentication is required**: Set up proper Firebase Auth and Firestore data
+6. **Authentication is required**: Set up proper Firebase Auth
+7. **Role-based access**: Admin endpoints require admin role
 
 ## 🔄 Quick Testing Script
 
@@ -234,28 +340,45 @@ ls -la lib/
 echo "Building project..."
 npm run build
 
-echo "Starting emulators..."
-npm run serve &
-EMULATOR_PID=$!
+echo "Starting server..."
+npm run dev &
+SERVER_PID=$!
 
-# Wait for emulators to start
-sleep 10
+# Wait for server to start
+sleep 5
 
 echo "Testing health endpoint..."
-curl -s http://localhost:5001/public-api-37564/us-central1/api/ | jq .
+curl -s http://localhost:3000/ | jq .
 
 echo "Testing Swagger docs..."
-curl -s http://localhost:5001/public-api-37564/us-central1/api/docs | head -10
+curl -s http://localhost:3000/docs | head -10
 
-# Stop emulators
-kill $EMULATOR_PID
+echo "Testing auth endpoint structure..."
+curl -s -X POST http://localhost:3000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{}' | jq .
+
+# Stop server
+kill $SERVER_PID
 
 echo "Tests completed!"
 ```
 
 ## 📚 Additional Resources
 
-- [Firebase Functions Documentation](https://firebase.google.com/docs/functions)
-- [TypeScript Firebase Functions Guide](https://firebase.google.com/docs/functions/typescript)
 - [Express.js Documentation](https://expressjs.com/)
+- [MongoDB/Mongoose Documentation](https://mongoosejs.com/)
+- [Firebase Admin SDK Documentation](https://firebase.google.com/docs/admin/setup)
+- [TypeScript Documentation](https://www.typescriptlang.org/)
 - [Swagger/OpenAPI Specification](https://swagger.io/specification/)
+
+## 🔍 Migration Notes
+
+This project was migrated from Firebase Cloud Functions to standalone Express.js for:
+- Better development experience
+- More flexibility in deployment options
+- Simplified local development
+- Enhanced middleware capabilities
+- Direct MongoDB integration
+
+See `CHANGES.md` for detailed migration information.
