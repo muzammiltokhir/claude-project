@@ -2,7 +2,6 @@ import request from 'supertest';
 import express, { Application } from 'express';
 import authRouter from '../../../routes/auth';
 import { auth } from '../../../config/firebase';
-import { clientAuth } from '../../../config/firebaseClient';
 import { User, UserRole } from '../../../models/User';
 import {
   signInWithEmailAndPassword,
